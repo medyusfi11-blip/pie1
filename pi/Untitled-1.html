@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Système de Gestion du Bibliothèque</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f8ff;
+        color: #333;
+        line-height: 1.6;
+      }
+      header {
+        background: linear-gradient(135deg, #007bff, #20b2aa);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 2.5em;
+      }
+      nav {
+        margin-top: 10px;
+      }
+      nav a {
+        color: white;
+        text-decoration: none;
+        margin: 0 15px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+      }
+      nav a:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      section {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      h2 {
+        color: #007bff;
+        border-bottom: 2px solid #20b2aa;
+        padding-bottom: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      th {
+        background-color: #f8f9fa;
+        color: #007bff;
+      }
+      button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      button:hover {
+        transform: translateY(-2px);
+      }
+      .borrow-btn {
+        background-color: #28a745;
+        color: white;
+      }
+      .borrow-btn:disabled {
+        background-color: #dc3545;
+        cursor: not-allowed;
+      }
+      .return-btn {
+        background-color: #fd7e14;
+        color: white;
+      }
+      .add-btn {
+        background-color: #007bff;
+        color: white;
+        width: 100%;
+        margin-top: 10px;
+      }
+      .cancel-btn {
+        background-color: #6c757d;
+        color: white;
+      }
+      .confirm-btn {
+        background-color: #28a745;
+        color: white;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+      #search {
+        margin-bottom: 20px;
+      }
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+      }
+      .hidden {
+        display: none;
+      }
+      .badge {
+        display: inline-block;
+        background-color: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.9em;
+      }
+      .success {
+        color: #28a745;
+        margin-top: 10px;
+      }
+      .error {
+        color: #dc3545;
+        margin-top: 10px;
+      }
+      @media (max-width: 768px) {
+        header h1 {
+          font-size: 2em;
+        }
+        nav a {
+          display: block;
+          margin: 5px 0;
+        }
+        section {
+          margin: 20px;
+          padding: 15px;
+        }
+        table {
+          font-size: 0.9em;
+        }
+        .modal-content {
+          width: 95%;
+        }
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>&#128218; Système de Gestion du Bibliothèque</h1>
+      <nav>
+        <a href="#livres">&#128216; Livres</a>
+        <a href="#ajouter">&#x2795; Ajouter</a>
+        <a href="#emprunts">&#128214; Emprunts</a>
+      </nav>
+    </header>
+
+    <section id="livres">
+      <h2>&#128216; Livres</h2>
+      <input
+        type="text"
+        id="search"
+        placeholder="Rechercher par titre, auteur ou catégorie"
+      />
+      <table id="booksTable">
+        <thead>
+          <tr>
+            <th>Titre</th>
+            <th>Auteur</th>
+            <th>Catégorie</th>
+            <th>Disponibilité</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="booksBody"></tbody>
+      </table>
+    </section>
+
+    <section id="ajouter">
+      <h2>&#x2795; Ajouter un livre</h2>
+      <form id="addForm">
+        <input type="text" id="title" placeholder="Titre" required />
+        <input type="text" id="author" placeholder="Auteur" required />
+        <select id="category" required>
+          <option value="">Sélectionnez une catégorie</option>
+          <option>Roman</option>
+          <option>Littérature</option>
+          <option>Science</option>
+          <option>Sciences / Société</option>
+          <option>Science-fiction & Fantasy</option>
+          <option>Informatique</option>
+          <option>Histoire</option>
+          <option>Développement Personnel</option>
+          <option>Éducation</option>
+          <option>Philosophie</option>
+          <option>Art</option>
+        </select>
+        <button type="submit" class="add-btn">Ajouter le livre</button>
+      </form>
+      <div id="addMessage" class="hidden"></div>
+    </section>
+
+    <section id="emprunts">
+      <h2>&#128214; Emprunts en cours</h2>
+      <table id="loansTable">
+        <thead>
+          <tr>
+            <th>Livre</th>
+            <th>Emprunteur</th>
+            <th>Date d'emprunt</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="loansBody"></tbody>
+      </table>
+      <div id="noLoans">Aucun emprunt en cours</div>
+    </section>
+
+    <div id="borrowModal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Emprunter un livre</h3>
+        <p id="bookInfo"></p>
+        <input
+          type="text"
+          id="borrower"
+          placeholder="Nom de l'emprunteur"
+          required
+        />
+        <button id="cancelBorrow" class="cancel-btn">Annuler</button>
+        <button id="confirmBorrow" class="confirm-btn">
+          Confirmer l'emprunt
+        </button>
+      </div>
+    </div>
+
+    <div id="overlay" class="hidden"></div>
+
+    <script>
+      // strecture des données
+      let books = [
+        {
+          id: 1,
+          title: "Les Misérables",
+          author: "Victor Hugo",
+          category: "Classique",
+          available: true,
+        },
+        {
+          id: 2,
+          title: "Le Rouge et le Noir",
+          author: "Stendhal",
+          category: "Classique",
+          available: true   ,
+        },
+        {
+          id: 3,
+          title: "Madame Bovary",
+          author: "Gustave Flaubert",
+          category: "Classique",
+          available: true,
+        },
+
+        {
+          id: 4,
+          title: "La Vie devant soi",
+          author: "Romain Gary (Émile Ajar)",
+          category: "Littérature contemporaine",
+          available: true,
+        },
+        {
+          id: 5,
+          title: "Le Petit Prince",
+          author: "Antoine de Saint-Exupéry",
+          category: "Littérature contemporaine",
+          available: true,
+        },
+        {
+          id: 6,
+          title: "L'Alchimiste",
+          author: "Paulo Coelho",
+          category: "Littérature contemporaine",
+          available: true,
+        },
+
+        {
+          id: 7,
+          title: "Les 7 habitudes de ceux qui réalisent tout ce qu'ils entreprennent",
+          author: "Stephen R. Covey",
+          category: "Développement personnel",
+          available: true,
+        },
+        {
+          id: 8,
+          title: "Influence et manipulation",
+          author: "Robert Cialdini",
+          category: "Développement personnel",
+          available: true,
+        },
+        {
+          id: 9,
+          title: "L'Art subtil de s'en foutre",
+          author: "Mark Manson",
+          category: "Développement personnel",
+          available: true,
+        },
+
+        {
+          id: 10,
+          title: "Sapiens : Une brève histoire de l'humanité",
+          author: "Yuval Noah Harari",
+          category: "Sciences / Société",
+          available: true,
+        },
+        {
+          id: 11,
+          title: "Homo Deus",
+          author: "Yuval Noah Harari",
+          category: "Sciences / Société",
+          available: true,
+        },
+        {
+          id: 12,
+          title: "Le monde de Sophie",
+          author: "Jostein Gaarder",
+          category: "Sciences / Société",
+          available: true,
+        },
+
+        {
+          id: 13,
+          title: "Dune",
+          author: "Frank Herbert",
+          category: "Science-fiction & Fantasy",
+          available: true,
+        },
+        {
+          id: 14,
+          title: "Le Seigneur des Anneaux",
+          author: "J.R.R. Tolkien",
+          category: "Science-fiction & Fantasy",
+          available: true,
+        },
+        {
+          id: 15,
+          title: "La Horde du Contrevent",
+          author: "Alain Damasio",
+          category: "Science-fiction & Fantasy",
+          available: true,
+        },
+      ];
+      let loans = [];
+      let nextId = 16;
+
+      // DOM elements
+      const booksBody = document.getElementById("booksBody");
+      const loansBody = document.getElementById("loansBody");
+      const noLoans = document.getElementById("noLoans");
+      const searchInput = document.getElementById("search");
+      const addForm = document.getElementById("addForm");
+      const addMessage = document.getElementById("addMessage");
+      const borrowModal = document.getElementById("borrowModal");
+      const overlay = document.getElementById("overlay");
+      const bookInfo = document.getElementById("bookInfo");
+      const borrowerInput = document.getElementById("borrower");
+      const cancelBorrow = document.getElementById("cancelBorrow");
+      const confirmBorrow = document.getElementById("confirmBorrow");
+
+      // Render books table
+      function renderBooks(filteredBooks = books) {
+        booksBody.innerHTML = "";
+        filteredBooks.forEach((book) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td>${book.category}</td>
+                    <td>${book.available ? "Disponible" : "Emprunté"}</td>
+                    <td>
+                        <button class="borrow-btn" data-livre-id="${book.id}" ${
+            !book.available ? "disabled" : ""
+          }>
+                            ${book.available ? "Emprunter" : "Indisponible"}
+                        </button>
+                    </td>
+                `;
+          booksBody.appendChild(row);
+        });
+      }
+
+      // Render loans table
+      function renderLoans() {
+        loansBody.innerHTML = "";
+        if (loans.length === 0) {
+          noLoans.classList.remove("hidden");
+          return;
+        }
+        noLoans.classList.add("hidden");
+        loans.forEach((loan, index) => {
+          const book = books.find((b) => b.id === loan.bookId);
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${book.title} - ${book.author}</td>
+                    <td><span class="badge"> &#128100; ${loan.borrower}</span></td>
+                    <td>${loan.date}</td>
+                    <td><button class="return-btn" data-loan-index="${index}">Retourner</button></td>
+                `;
+          loansBody.appendChild(row);
+        });
+      }
+
+      // Search functionality
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.toLowerCase();
+        const filtered = books.filter(
+          (book) =>
+            book.title.toLowerCase().includes(query) ||
+            book.author.toLowerCase().includes(query) ||
+            book.category.toLowerCase().includes(query)
+        );
+        renderBooks(filtered);
+      });
+
+      // Add book form
+      addForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const title = document.getElementById("title").value.trim();
+        const author = document.getElementById("author").value.trim();
+        const category = document.getElementById("category").value;
+        if (!title || !author || !category) {
+          showMessage("Veuillez remplir tous les champs.", "error");
+          return;
+        }
+        books.push({ id: nextId++, title, author, category, available: true });
+        addForm.reset();
+        renderBooks();
+        showMessage("Livre ajouté avec succès!", "success");
+        document
+          .getElementById("livres")
+          .scrollIntoView({ behavior: "smooth" });
+      });
+
+      // Borrow modal
+      booksBody.addEventListener("click", (e) => {
+        if (e.target.classList.contains("borrow-btn") && !e.target.disabled) {
+          const bookId = parseInt(e.target.dataset.livreId);
+          const book = books.find((b) => b.id === bookId);
+          bookInfo.textContent = `${book.title} par ${book.author}`;
+          borrowModal.classList.remove("hidden");
+          overlay.classList.remove("hidden");
+          borrowerInput.focus();
+          borrowerInput.value = "";
+          confirmBorrow.dataset.bookId = bookId;
+        }
+      });
+
+      // Confirm borrow
+      confirmBorrow.addEventListener("click", () => {
+        const borrower = borrowerInput.value.trim();
+        if (!borrower) {
+          alert("Veuillez entrer le nom de l'emprunteur.");
+          return;
+        }
+        const bookId = parseInt(confirmBorrow.dataset.bookId);
+        const book = books.find((b) => b.id === bookId);
+        book.available = false;
+        loans.push({
+          bookId,
+          borrower,
+          date: new Date().toLocaleDateString("fr-FR"),
+        });
+        renderBooks();
+        renderLoans();
+        closeModal();
+      });
+
+      // Cancel borrow
+      cancelBorrow.addEventListener("click", closeModal);
+
+      // Close modal on overlay click or Escape
+      overlay.addEventListener("click", closeModal);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !borrowModal.classList.contains("hidden")) {
+          closeModal();
+        }
+        if (e.key === "Enter" && !borrowModal.classList.contains("hidden")) {
+          confirmBorrow.click();
+        }
+      });
+
+      // Return book
+      loansBody.addEventListener("click", (e) => {
+        if (e.target.classList.contains("return-btn")) {
+          const index = parseInt(e.target.dataset.loanIndex);
+          const loan = loans[index];
+          const book = books.find((b) => b.id === loan.bookId);
+          if (
+            confirm(
+              `Confirmer le retour de "${book.title}" par ${loan.borrower}?`
+            )
+          ) {
+            loans.splice(index, 1);
+            book.available = true;
+            renderBooks();
+            renderLoans();
+          }
+        }
+      });
+
+      // Utility functions
+      function closeModal() {
+        borrowModal.classList.add("hidden");
+        overlay.classList.add("hidden");
+      }
+
+      function showMessage(text, type) {
+        addMessage.textContent = text;
+        addMessage.className = type;
+        addMessage.classList.remove("hidden");
+        setTimeout(() => addMessage.classList.add("hidden"), 3000);
+      }
+
+      // Initial render
+      renderBooks();
+      renderLoans();
+    </script>
+  </body>
+</html>
